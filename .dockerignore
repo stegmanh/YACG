@@ -1,0 +1,7 @@
+client/src
+client/elm.json
+client/package-lock.json
+client/elm-stuff
+client/node_modules
+.idea
+gradlew.bat
