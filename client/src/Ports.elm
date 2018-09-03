@@ -12,6 +12,7 @@ port recieveFromJs : (E.Value -> msg) -> Sub msg
 
 type JsMessageType
     = Join
+    | Start
     | Update
     | Disconnect
     | Set
@@ -23,6 +24,9 @@ encodeJsMessageType jsMessageType =
     case jsMessageType of
         Join ->
             E.string "JOIN"
+
+        Start ->
+            E.string "START"
 
         Update ->
             E.string "UPDATE"
@@ -58,6 +62,15 @@ sendJsDisconnectMessage =
             JsMessage Disconnect (E.string "")
     in
         sendToJs <| encodeJsMessage disconnectMessage
+
+
+sendJsStartMessage : Cmd msg
+sendJsStartMessage =
+    let
+        startMessage =
+            JsMessage Start (E.string "")
+    in
+        sendToJs <| encodeJsMessage startMessage
 
 
 sendJsJoinMessage : String -> String -> Cmd msg

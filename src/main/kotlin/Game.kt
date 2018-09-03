@@ -41,6 +41,9 @@ class Game {
             if (isAllPlayersReady()) {
                 start()
             }
+        } else if (gameMessage.isStartMessage()) {
+            player.ready = true
+            start()
         } else if (gameMessage.isUpdateMessage()) {
             val gameUpdateMessage = mapper.readValue(message, GameUpdateMessage::class.java)
             val moved = deck.playCard(gameUpdateMessage.data)
@@ -56,7 +59,7 @@ class Game {
     }
 
     private fun start() {
-        this.state = GameState.Playing;
+        this.state = GameState.Playing
 
         players.forEach { session, player ->
             session.send(getStartGameString(player))
@@ -135,6 +138,10 @@ class GameMessage(messageType: String, data: JsonNode) {
 
     fun isUpdateMessage(): Boolean {
         return messageType.contentEquals("UPDATE")
+    }
+
+    fun isStartMessage(): Boolean {
+        return messageType.contentEquals("START")
     }
 }
 

@@ -43,6 +43,7 @@ initialModel =
 
 type Msg
     = PortMessage E.Value
+    | StartGame
     | LeaveRoom
     | GameUpdate JsonMessage
     | SelectCard Card
@@ -64,6 +65,9 @@ update msg model =
 
         LeaveRoom ->
             ( model, Cmd.none )
+
+        StartGame ->
+            ( model, Ports.sendJsStartMessage )
 
         GameUpdate jsonMessage ->
             case jsonMessage of
@@ -128,7 +132,8 @@ view model =
             div [ class "game-connecting" ]
                 [ p [] [ text "Waiting for all players to connect" ]
                 , p [] [ text ("Invite them to connect @ " ++ model.roomId) ]
-                , button [ onClick LeaveRoom ] [ text "Leave Room" ]
+                , button [ class "game-start-bnt", onClick StartGame ] [ text "Start Game" ]
+                , button [ class "game-leave-btn", onClick LeaveRoom ] [ text "Leave Room" ]
                 ]
 
         Playing ->

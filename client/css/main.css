@@ -71,6 +71,14 @@ h4 {
     margin-top: 3em;
 }
 
+.game-start-btn {
+    margin-right: 10px;
+}
+
+.game-leave-btn {
+    margin-left: 10px;
+}
+
 .game-container {
     width: 100%;
 }
