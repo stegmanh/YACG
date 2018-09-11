@@ -69,6 +69,7 @@ h4 {
 
 .create-game-text {
     margin-top: 3em;
+    text-align: left;
 }
 
 .game-start-btn {
@@ -90,6 +91,13 @@ h4 {
 .game-winners {
     text-align: center;
 }
+
+.create-game-container {
+    display: grid;
+    grid-template-columns: auto 5em;
+    grid-column-gap: 5px;
+}
+
 
 .s-player-container {
     margin: 0 auto;

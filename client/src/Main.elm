@@ -33,8 +33,19 @@ type View
 -- MODEL
 
 
+type alias GameOptions =
+    { maxDecks : Int
+    }
+
+
+defaultGameOptions : GameOptions
+defaultGameOptions =
+    GameOptions 27
+
+
 type alias Model =
     { roomToJoin : String
+    , gameOptions : GameOptions
     , playerName : String
     , view : View
     , gameModel : Game.Model
@@ -43,7 +54,7 @@ type alias Model =
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( Model "" "" Main Game.initialModel
+    ( Model "" defaultGameOptions "" Main Game.initialModel
     , Cmd.none
     )
 
@@ -55,6 +66,7 @@ init _ =
 type Msg
     = GetNewRoomId
     | GotNewRoomId (Result Http.Error String)
+    | UpdateGameOptions String
     | UpdateRoomToJoin String
     | UpdatePlayerName String
     | JoinRoom String
@@ -68,7 +80,7 @@ update msg model =
     case msg of
         GetNewRoomId ->
             ( model
-            , getNewRoomId
+            , getNewRoomId model.gameOptions
             )
 
         GotNewRoomId result ->
@@ -78,6 +90,24 @@ update msg model =
 
                 Err err ->
                     ( { model | roomToJoin = "" }, Ports.sendErrorMessage "Error creating room" "Http error. Check network log" )
+
+        UpdateGameOptions newMaxDecksString ->
+            let
+                newMaxDecks =
+                    case String.toInt newMaxDecksString of
+                        Just val ->
+                            val
+
+                        Nothing ->
+                            27
+
+                gO =
+                    model.gameOptions
+
+                gO_ =
+                    { gO | maxDecks = newMaxDecks }
+            in
+                ( { model | gameOptions = gO_ }, Cmd.none )
 
         UpdateRoomToJoin roomId ->
             ( { model | roomToJoin = roomId }, Cmd.none )
@@ -158,8 +188,16 @@ view model =
                             , div [] [ input [ type_ "text", placeholder "RoomID", onInput (\s -> UpdateRoomToJoin s), value model.roomToJoin, class "two-seventy-five" ] [] ]
                             , div [] [ button [ disabled (not allowJoin), onClick <| JoinRoom model.roomToJoin, class "two-seventy-five" ] [ text "Join" ] ]
                             , div []
-                                [ div [ class "create-game-text" ] [ text "No Game? Create One" ]
-                                , button [ onClick GetNewRoomId, classList [ ( "two-seventy-five", True ), ( "create-btn", True ) ] ] [ text "Create" ]
+                                [ div [ class "create-game-container" ]
+                                    [ div []
+                                        [ div [ class "create-game-text" ] [ text "No Game? Create One:" ]
+                                        , button [ onClick GetNewRoomId, classList [ ( "two-seventy-five", True ), ( "create-btn", True ) ] ] [ text "Create" ]
+                                        ]
+                                    , div []
+                                        [ div [ class "create-game-text" ] [ text "Play until:" ]
+                                        , input [ type_ "number", Html.Attributes.min "1", Html.Attributes.max "27", value (String.fromInt model.gameOptions.maxDecks), onInput (\s -> UpdateGameOptions s) ] []
+                                        ]
+                                    ]
                                 ]
                             ]
                         ]
@@ -181,9 +219,13 @@ view model =
 -- Helper functions
 
 
-getNewRoomId : Cmd Msg
-getNewRoomId =
-    Http.send GotNewRoomId (Http.post ("/create") Http.emptyBody gotNewRoomIdDecoder)
+getNewRoomId : GameOptions -> Cmd Msg
+getNewRoomId options =
+    let
+        createUrl =
+            "/create/" ++ String.fromInt options.maxDecks
+    in
+        Http.send GotNewRoomId (Http.post createUrl Http.emptyBody gotNewRoomIdDecoder)
 
 
 gotNewRoomIdDecoder : Decode.Decoder String

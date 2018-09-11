@@ -20,11 +20,12 @@ enum class GameState {
     Finished
 }
 
-class Game {
+class Game (val playRounds: Int) {
     val deck = Deck()
     val players = HashMap<WsSession, Player>()
-    var state = GameState.NotStarted
     val createdTime = Date()
+    var state = GameState.NotStarted
+    var roundsPlayed = 0
 
     fun handleMessage(session: WsSession, message: String) {
         val player = players.get(session)
@@ -49,8 +50,9 @@ class Game {
             val moved = deck.playCard(gameUpdateMessage.data)
             if (moved) {
                 player.score = player.score + 1
+                roundsPlayed++
                 update()
-                if (deck.isDeckOver) {
+                if (deck.isDeckOver || roundsPlayed >= playRounds) {
                     endGame()
                 }
             }

@@ -34,9 +34,11 @@ fun main(args: Array<String>) {
         // TODO: Only server the static files needed
         enableStaticFiles("./client", Location.EXTERNAL)
 
-        post("/create") { ctx ->
+        post("/create/:till") { ctx ->
             val roomId = UUID.randomUUID().toString()
-            Games.putIfAbsent(roomId, Game())
+            val tillParam= ctx.pathParam("till").trim()
+            val till = tillParam.toIntOrNull() ?: 27
+            Games.putIfAbsent(roomId, Game(till))
             ctx.json(object { var room = roomId })
         }
 
@@ -56,7 +58,7 @@ fun main(args: Array<String>) {
         ws("/join/:room") { ws ->
             ws.onConnect { session ->
                 val pathParam = session.pathParam("room").trim()
-                val game = Games.getOrPut(pathParam, { Game() })
+                val game = Games.getOrPut(pathParam, { Game(27) })
 
                 if (game == null) {
                     session.send("ERROR: Session not found")
