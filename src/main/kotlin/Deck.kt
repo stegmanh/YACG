@@ -51,6 +51,7 @@ class Deck {
             cards.addAll(playingCards)
             playingCards.clear()
 
+            // 0 .. Num cards - 1
             for (i in 0..11) {
                 val card = cards.elementAt(i)
                 playingCards.add(card)

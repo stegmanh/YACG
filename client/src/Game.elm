@@ -153,8 +153,6 @@ renderBoard model =
     let
         cardGroups =
             List.map (renderCard model) model.cards
-                |> partition 3
-                |> List.map (\group -> div [ classList [ ( "s-card-group", True ) ] ] group)
     in
         div [ classList [ ( "game-board", True ) ] ] cardGroups
 
