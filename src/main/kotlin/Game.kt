@@ -38,10 +38,9 @@ class Game (val playRounds: Int) {
         val gameMessage = mapper.readValue(message, GameMessage::class.java)
 
         if (gameMessage.isReadyMessage()) {
+            // For now - allow players to manually start
+            // TODO: Auto start configure option
             player.ready = true
-            if (isAllPlayersReady()) {
-                start()
-            }
         } else if (gameMessage.isStartMessage()) {
             player.ready = true
             start()
@@ -66,6 +65,10 @@ class Game (val playRounds: Int) {
         players.forEach { session, player ->
             session.send(getStartGameString(player))
         }
+    }
+
+    fun hasStarted(): Boolean {
+        return this.state == GameState.Playing
     }
 
     private fun update() {
@@ -127,6 +130,10 @@ class Game (val playRounds: Int) {
         }
 
         return mapper.writeValueAsString(startObject)
+    }
+
+    fun isNameTaken(name: String): Boolean {
+        return this.players.any{ it.component2().name.contentEquals(name) }
     }
 }
 

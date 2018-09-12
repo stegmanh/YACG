@@ -13,13 +13,10 @@ fun main(args: Array<String>) {
     // Spin up thread to clean up outstanding games
     thread(true, true, null, null, -1) {
         while (true) {
-            val toRemove = ArrayList<String>()
-            Games.forEach {id, game ->
-                val fiveAgo = Date(System.currentTimeMillis() - (5 * 60 * 1000))
-                if (game.createdTime.before(fiveAgo) && game.players.size == 0) {
-                    toRemove.add(id)
-                }
-            }
+            val fiveAgo = Date(System.currentTimeMillis() - (5 * 60 * 1000))
+            val toRemove = Games.asSequence()
+                    .filter { (id, game) -> game.createdTime.before(fiveAgo) && game.players.size == 0 }
+                    .map { (id, game) -> id }
 
             toRemove.forEach {Games.remove(it)}
             Thread.sleep(60 * 1000)
@@ -63,36 +60,30 @@ fun main(args: Array<String>) {
                 if (game == null) {
                     session.send("ERROR: Session not found")
                     session.disconnect()
-                } else if (game.players.size > 1) {
-                    session.send("ERROR: Session is full")
+                } else if (game.hasStarted()) {
+                    session.send("ERROR: Session has started")
                     session.disconnect()
                 } else {
-                    var name = if (game.players.size > 0) "player2" else "player1"
-                    if (session.queryString() != null) {
-                        var potentialName = session.queryParam("name")
-                        if (potentialName != null && potentialName.isNotEmpty() && !game.players.any { it.component2().name.contentEquals(potentialName) }) {
-                            name = potentialName
+                    synchronized(game) {
+                        var name = "player${game.players.size + 1}"
+                        if (session.queryString() != null) {
+                            var potentialName = session.queryParam("name")
+                            if (!potentialName.isNullOrEmpty() && !game.isNameTaken(potentialName!!)) {
+                                name = potentialName
+                            }
                         }
-                    }
-                    println(name)
 
-                    game.players.put(session, Player(name))
+                        game.players.put(session, Player(name))
+                    }
                 }
             }
 
             // TODO: Broadcast disconnect message
+            // TODO: Consider what to do if game has no more players
+            // TODO: Maybe only kill the game if the game is over?
             ws.onClose { session, status, message ->
                 val pathParam = session.pathParam("room")?.trim()
-                val game = Games.get(pathParam)
-
-                println("Here")
-                if (game != null) {
-                    game.players.remove(session)
-                    if (game.players.size == 0) {
-                        println("Destroying game session")
-                        Games.remove(pathParam)
-                    }
-                }
+                println("Player has left game '$pathParam'")
             }
 
             ws.onMessage { session, message ->
